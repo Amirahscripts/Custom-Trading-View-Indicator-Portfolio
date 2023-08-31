@@ -1,0 +1,155 @@
+Historical Volatility Estimators (HVE) 
+This custom Trading View indicator calculates and displays the Historical Volatility (HV) of a given asset. It provides visual cues via flashes to help traders interpret the volatility data and anticipate potential market movements. 
+
+//@version=4
+study(title="Historical Volatility Estimators (HVE)", shorttitle="HVE", overlay=true)
+
+// User-defined input
+length = input(defval=30, title="Length", minval=1)
+annual = input(defval=365, title="Annual Period", minval=1)
+percentile_length = input(defval=30, title="Percentile Length", minval=1)
+volatility_model = input(defval="EWMA", title="Volatility Model", options=["EWMA", "Mean Absolute Deviation"])
+
+// Function to compute Historical Volatility based on chosen model
+historical_volatility() =>
+    if (volatility_model == "EWMA")
+        sqrt(252) * stdev(close, length)
+    else
+        sum(abs(close - close[1]), length) / length
+
+// Calculate Historical Volatility
+hv = historical_volatility()
+
+// Array to store HV values
+hv_array = array.new_float(0)
+
+// Add current hv to the array
+array.unshift(hv_array, hv)
+
+// Calculate the 50th percentile only if there are sufficient data points
+p50 = array.size(hv_array) > 1 ? array.get(hv_array, ceil(array.size(hv_array) / 2)) : na
+
+// Calculate HV percentile
+hv_percentile = (hv - lowest(hv, percentile_length)) / (highest(hv, percentile_length) - lowest(hv, percentile_length))
+
+// Calculate moving average of HV for the expanding/contracting condition
+ma_hv = sma(hv, length)
+
+// Logic to determine the flashes and arrows
+hv_expanding = ma_hv > ma_hv[1]
+hv_contracting = ma_hv < ma_hv[1]
+flash = hv < p50 and hv < hv[1]
+
+// Plot HV as a histogram
+histogramColor = hv < p50 ? color.green : color.red
+plot(hv, style=plot.style_histogram, color=histogramColor, title="Historical Volatility", linewidth=1)
+
+// Plot MA of HV
+plot(ma_hv, color=color.red, title="Moving Average of HV", linewidth=2)
+
+// Adjusted arrows for clarity
+plotarrow(hv_expanding ? 1 : hv_contracting ? -1 : na, title="HV Direction", colorup=color.green, colordown=color.red, offset=-1)
+
+// Flash to indicate potential large move
+plotshape(series=flash, color=color.white, style=shape.cross, title="Volatility Flash", location=location.belowbar, size=size.large)
+
+// Display HV percentile as background color
+bgcolor(hv_percentile <= 0.5 ? color.new(color.green, 90) : color.new(color.red, 90))
+
+// Create labels for the information
+label.new(x=bar_index, y=high, text="Absolute Historical Volatility: " + tostring(hv), color=color.new(color.blue, 80), yloc=yloc.abovebar, style=label.style_label_up)
+label.new(x=bar_index, y=low, text="50th Percentile: " + tostring(p50), color=color.new(color.red, 80), yloc=yloc.belowbar, style=label.style_label_down)
+
+Breakdown of HVE indicator:
+
+Initialization:
+The script is initialized with the title "Historical Volatility Estimators (HVE)". The overlay=true parameter ensures the indicator is plotted directly on the price chart.
+
+User-defined Inputs:
+The user can customize the indicator's parameters, such as the length for calculations, the annual period, the percentile length, and choose between two volatility models: EWMA and Mean Absolute Deviation.
+
+Historical Volatility Calculation:
+The indicator calculates the historical volatility based on the chosen model. If "EWMA" is selected, it calculates the annualized standard deviation of closing prices. Otherwise, it calculates the mean absolute deviation.
+
+Array Initialization and Data Storage:
+An array is initialized to store HV values. The current HV value is added to the beginning of this array.
+
+Percentile Calculation:
+The 50th percentile of the HV values stored in the array is calculated.
+
+HV Percentile and Moving Average Calculation:
+The HV percentile and the simple moving average of HV are calculated.
+
+Logic for Visual Cues:
+The indicator determines conditions for visual cues. If the moving average of HV is rising, it's "expanding". If it's falling, it's "contracting". The "flash" condition checks if the current HV is below the 50th percentile and is also less than the previous HV.
+
+Plotting:
+The indicator visually represents the calculated data on the chart. This includes the HV histogram, moving average of HV, arrows indicating HV direction, flashes indicating potential large moves, background colors representing HV percentile, and labels displaying HV values.
+
+Interpretation:
+The "flash" is an indication of a potential large move in the asset's price. Specifically, it suggests that:
+
+The current volatility is relatively low compared to recent historical data (since it's below the median or 50th percentile).
+The volatility is decreasing (since the current HV is less than the previous HV).
+When volatility is low and decreasing, it often indicates a period of consolidation in the market. After such periods of consolidation, assets can often experience significant price moves, either upwards or downwards. The "flash" is a visual cue to the trader that the market might be gearing up for a more substantial move soon.
+
+Breakdown of the code with explanation: 
+
+1. Intialisation
+study(title="Historical Volatility Estimators (HVE)", shorttitle="HVE", overlay=true)
+
+This line initialises the script and sets the title of the indicator. The overlay=true means that the indicator will be plotted directly on the price chart.
+
+2. User-defined Inputs
+length = input(defval=30, title="Length", minval=1)
+annual = input(defval=365, title="Annual Period", minval=1)
+percentile_length = input(defval=30, title="Percentile Length", minval=1)
+volatility_model = input(defval="EWMA", title="Volatility Model", options=["EWMA", "Mean Absolute Deviation"])
+
+These lines allow the user to customize the indicator's parameters. The user can set the length for calculations, the annual period, the percentile length, and choose between two volatility models.
+
+3. Historical Volatility Calculation
+
+historical_volatility() =>
+    if (volatility_model == "EWMA")
+        sqrt(252) * stdev(close, length)
+    else
+        sum(abs(close - close[1]), length) / length
+
+This function calculates the historical volatility based on the chosen model. If "EWMA" is selected, it calculates the annualized standard deviation of closing prices. Otherwise, it calculates the mean absolute deviation.
+
+4. Array Initialization and Data Storage
+
+hv_array = array.new_float(0)
+array.unshift(hv_array, hv)
+
+An array is initialized to store HV values. The current HV value is added to the beginning of this array.
+
+5. Percentile Calculation
+
+p50 = array.size(hv_array) > 1 ? array.get(hv_array, ceil(array.size(hv_array) / 2)) : na
+
+This calculates the 50th percentile of the HV values stored in the array.
+
+6. HV Percentile and Moving Average Calculation
+
+hv_percentile = (hv - lowest(hv, percentile_length)) / (highest(hv, percentile_length) - lowest(hv, percentile_length))
+ma_hv = sma(hv, length)
+
+The HV percentile and the simple moving average of HV are calculated.
+
+7. Logic for Visual Cues
+
+hv_expanding = ma_hv > ma_hv[1]
+hv_contracting = ma_hv < ma_hv[1]
+flash = hv < p50 and hv < hv[1]
+
+These lines determine the conditions for visual cues. If the moving average of HV is rising, it's "expanding". If it's falling, it's "contracting". The "flash" condition checks if the current HV is below the 50th percentile and is also less than the previous HV.
+
+Plotting:
+Various plot, plotarrow, plotshape, bgcolor, and label.new functions are used to visually represent the calculated data on the chart. 
+This includes the HV histogram, moving average of HV, arrows indicating HV direction, flashes indicating potential large moves, background colors representing HV percentile, and labels displaying HV values.
+
+Summary:
+The "Historical Volatility Estimators (HVE)" indicator calculates the historical volatility of an asset using either the EWMA or Mean Absolute Deviation model. 
+It provides visual cues like arrows, flashes, and background colors to help users interpret the volatility data. The user can customize the parameters of the indicator, such as the length for calculations, the annual period, and the percentile length.
