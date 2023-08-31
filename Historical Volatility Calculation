@@ -1,0 +1,64 @@
+The historical_volatility() function calculates the historical volatility based on the chosen model. There are two models provided: EWMA (Exponentially Weighted Moving Average) and Mean Absolute Deviation.
+
+
+EWMA (Exponentially Weighted Moving Average)
+EWMA is a method used to calculate volatility where more recent data points are given more weight than older data points. Unlike a simple moving average where each data point has an equal weight, EWMA gives exponentially decreasing weights as the data points get older. This makes the EWMA more responsive to recent price changes.
+
+Mathematically, the EWMA for a time series 
+
+x is given by:
+
+EWMA(t)=λ×x(t)+(1−λ)×EWMA(t−1)
+
+Where:
+
+λ is the weighting factor, a number between 0 and 1.
+
+x(t) is the data point at time 
+
+EWMA(t−1) is the EWMA value for the previous time point.
+In the context of volatility, the EWMA model emphasizes the impact of recent price changes on volatility, making it adaptive to new market conditions.
+
+
+Mean Absolute Deviation (MAD)
+Mean Absolute Deviation is a measure of dispersion in a dataset. Instead of squaring the deviations from the mean (as in standard deviation), MAD calculates the average of the absolute deviations. 
+This makes MAD less sensitive to extreme values or outliers compared to standard deviation.
+In the context of stock prices, MAD provides a straightforward measure of average volatility without giving undue emphasis to large price swings.
+
+
+The historical_volatility() function calculates the historical volatility based on the chosen model. There are two models provided: EWMA (Exponentially Weighted Moving Average) and Mean Absolute Deviation.
+
+EWMA (Exponentially Weighted Moving Average)
+sqrt(252) * stdev(close, length)
+
+Explanation: 
+stdev(close, length): This calculates the standard deviation of the closing prices over a specified length. The standard deviation is a measure of how spread out the numbers in a data set are. In the context of stock prices, it measures the average deviation of prices from the mean, giving an idea of price volatility.
+
+sqrt(252): This is an annualization factor. The number 252 represents the typical number of trading days in a year. By multiplying the standard deviation by the square root of 252, we're scaling the daily volatility to an annualized measure. This is a common practice in finance to compare volatilities over different time frames.
+
+Thus, for the EWMA model, the function returns the annualized standard deviation of closing prices over the specified length.
+
+Mean Absolute Deviation
+sum(abs(close - close[1]), length) / length
+
+Explanation: 
+Explanation:
+
+close - close[1]: This calculates the daily price change. It subtracts the previous day's closing price from the current day's closing price.
+
+abs(close - close[1]): This takes the absolute value of the daily price change. The absolute value ensures that we're considering the magnitude of the change, regardless of its direction (up or down).
+
+sum(abs(close - close[1]), length): This sums up the absolute daily price changes over the specified length.
+
+/ length: This divides the sum by the length to get the average.
+
+Thus, for the Mean Absolute Deviation model, the function returns the average absolute daily price change over the specified length.
+
+
+
+Mathematical Rationale:
+Historical volatility is a measure of how much an asset's price has moved in the past. Both the standard deviation (used in the EWMA model) and the mean absolute deviation provide measures of dispersion or variability in a dataset.
+
+EWMA: The standard deviation gives more weight to larger deviations because it squares the differences from the mean. This makes it sensitive to outliers or extreme values. In the context of stock prices, it means that large price swings will have a more pronounced effect on the calculated volatility.
+
+Mean Absolute Deviation: By taking the average of the absolute daily price changes, this method gives equal weight to all price changes, regardless of their magnitude. It's a more straightforward measure of average volatility and is less influenced by extreme values compared to the standard deviation.
