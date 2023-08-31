@@ -153,3 +153,5 @@ This includes the HV histogram, moving average of HV, arrows indicating HV direc
 Summary:
 The "Historical Volatility Estimators (HVE)" indicator calculates the historical volatility of an asset using either the EWMA or Mean Absolute Deviation model. 
 It provides visual cues like arrows, flashes, and background colours to help users interpret the volatility data. The user can customize the parameters of the indicator, such as the length for calculations, the annual period, and the percentile length.
+
+See next file on Historical Volatility Calculation for further explanation on the maths behind HVE. 
